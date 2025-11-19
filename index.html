@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christmas Gift Roulette</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load custom fonts --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Christmas color palette */
+        :root {
+            --christmas-red: #B91C1C; /* Deep Red */
+            --christmas-green: #059669; /* Emerald Green */
+            --christmas-gold: #FFD700; /* Gold */
+            --winter-blue: #3B82F6; /* Winter Blue */
+            --snow-white: #F9FAFB; /* Snow White */
+            --dark-background: #1F2937; /* Dark Blue/Gray Background */
+            --neon-red: #FF1A1A; /* Bright Neon Red */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--snow-white);
+            background-color: var(--dark-background); /* Fallback for no image */
+            overflow-x: hidden; 
+            
+            /* Background Image Styles */
+            background-image: url('https://pmg.ua/static/content/thumbs/1200x630/b/6b/5qvltc---c1200x630x50px50p-up--41c73b10fb3aac99a2a670b32e5716bb.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* Ensures it stays fixed during scroll */
+            position: relative; /* Needed for overlay */
+            touch-action: manipulation; /* Disables double-tap to zoom on some mobile browsers */
+        }
+
+        /* Overlay for darkening the background image */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* 70% black overlay */
+            z-index: -1; /* Place behind content but above the image */
+        }
+
+        h1, h2 {
+            font-family: 'Montserrat', sans-serif; /* Bold and modern for headings */
+        }
+
+        /* --- Red Neon Border Style (New) --- */
+        .modal-neon {
+            border: 4px solid var(--neon-red);
+            box-shadow: 
+                0 0 10px rgba(255, 26, 26, 0.8),    /* Inner tight glow */
+                0 0 25px rgba(255, 26, 26, 0.6),    /* Middle glow */
+                0 0 50px rgba(255, 26, 26, 0.4),    /* Outer soft glow */
+                inset 0 0 20px rgba(255, 26, 26, 0.2); /* Inner box glow */
+        }
+
+        /* --- Realistic Snowfall Animations --- */
+        #snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1; /* Below the main content */
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            background: var(--snow-white);
+            border-radius: 50%;
+            opacity: 0;
+            animation: fall linear infinite;
+            filter: blur(var(--blur-size));
+        }
+
+        @keyframes fall {
+            0% {
+                opacity: 0;
+                transform: translate3d(var(--x-start), 0, 0);
+            }
+            10% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0.5;
+                transform: translate3d(var(--x-end), 100vh, 0);
+            }
+        }
+
+        /* --- Animations --- */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) 2;
+        }
+
+        @keyframes break-pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.25); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-break {
+            animation: break-pop 0.4s ease-in-out forwards;
+        }
+
+        /* --- Roulette Styles --- */
+        .roulette-item {
+            width: 8rem;  /* 128px */
+            height: 8rem; /* 128px */
+            margin-left: 0.5rem; /* 8px */
+            margin-right: 0.5rem; /* 8px */
+            flex-shrink: 0;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2), inset 0 -4px 6px rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            background-color: var(--dark-background); 
+            border-color: var(--christmas-green); 
+            border-width: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; 
+        }
+
+        .roulette-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            object-position: center;
+        }
+
+
+        #roulette-strip {
+            will-change: transform;
+            transition: transform 6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* --- Fireworks & Confetti Styles --- */
+        .firework-star {
+            position: absolute;
+            background-color: var(--star-color, #fff);
+            border-radius: 50%;
+            opacity: 0;
+            will-change: transform, opacity;
+            animation-name: firework-rise-burst;
+            animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes firework-rise-burst {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; width: 3px; height: 3px; }
+            30% { transform: translate(var(--rise-x), var(--rise-y)) scale(1.2); opacity: 1; width: 5px; height: 5px; }
+            100% { transform: translate(var(--burst-x), var(--burst-y)) scale(0); opacity: 0; width: 0px; height: 0px; }
+        }
+
+        .firework-sparkle {
+            position: absolute;
+            background-color: var(--sparkle-color, #fff);
+            border-radius: 50%;
+            opacity: 0;
+            will-change: transform, opacity;
+            animation-name: firework-sparkle-fade;
+            animation-timing-function: ease-out;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes firework-sparkle-fade {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--sparkle-tx), var(--sparkle-ty)) scale(0); opacity: 0; }
+        }
+
+        .checkmark__circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 2;
+            stroke: var(--christmas-green);
+            fill: none;
+            animation: 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards stroke;
+        }
+        
+        @keyframes stroke {
+            100% { stroke-dashoffset: 0; }
+        }
+
+        .checkmark__check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            stroke-width: 3;
+            stroke: var(--christmas-green);
+            fill: none;
+            animation: 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards stroke;
+        }
+
+        @keyframes modal-pop-in {
+            0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .modal-content-animated {
+            animation: modal-pop-in 0.4s ease-out forwards;
+        }
+        
+        .confetti-particle {
+            position: fixed;
+            z-index: 100;
+            top: -20px;
+            border-radius: 2px;
+            opacity: 0;
+            will-change: transform, opacity;
+            animation-name: fall-flutter;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+        
+        @keyframes fall-flutter {
+            0% { transform: translateY(-20px) translateX(var(--x-start)) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) translateX(var(--x-end)) rotate(720deg); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body class="text-white flex items-center justify-center min-h-screen overflow-hidden">
+
+    <!-- Container for the Snowfall Animation (Z-index 1) --><div id="snow-container"></div>
+    
+    <!-- Chest Section (Z-index 10) --><section id="chest-section" class="text-center transition-all duration-500 relative z-10">
+        <h1 class="text-4xl font-bold mb-6" style="color: var(--christmas-gold); text-shadow: 0 0 10px var(--christmas-gold);">Open Your Gift!</h1>
+        
+        <!-- Wrapper for Chest and Hat: Both will shake together --><div id="chest-container" class="relative w-64 h-64 md:w-80 md:h-80 mx-auto">
+            <!-- Santa Hat: UPDATED POSITION (even lower) --><!-- Changed top-2 to top-8 and left-5 to left-8 (adjusted slightly for visual fit) --><img src="https://i.postimg.cc/MGVs38D3/pngwing-com-(4).png" 
+                 alt="Santa Hat"
+                 class="absolute top-8 left-8 w-20 md:w-24 z-20 pointer-events-none transform -rotate-12 drop-shadow-lg">
+
+            <!-- Original Chest Image --><img id="chest-img" src="https://i.ibb.co/WNd3dzNs/Chat-GPT-Image-22-2025-12-58-21-1.png" alt="Gift Chest" class="w-full h-full object-contain relative z-10"
+            onerror="this.onerror=null; this.src='https://placehold.co/320x320/B91C1C/F9FAFB?text=Chest_Error';">
+        </div>
+
+        <button id="open-button" class="mt-8 px-8 py-3 text-white font-bold text-xl rounded-full shadow-lg hover:bg-red-700 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-70"
+                style="background-color: var(--christmas-red); color: var(--snow-white); box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); ring-color: var(--christmas-gold);">
+            Open
+        </button>
+    </section>
+
+    <!-- Roulette Section (Z-index 10) --><section id="roulette-section" class="hidden w-full text-center transition-all duration-500 relative z-10">
+        <h1 class="text-4xl font-bold mb-6" style="color: var(--winter-blue); text-shadow: 0 0 10px var(--winter-blue);">Spin the Wheel!</h1>
+        
+        <!-- Roulette container --><div id="roulette-container" class="relative w-full max-w-6xl mx-auto h-40 overflow-hidden rounded-lg bg-black/50 border border-gray-700 shadow-inner">
+            <!-- Pointer --><div class="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-full z-10 rounded-full shadow-lg" 
+                 style="background-color: var(--christmas-red); box-shadow: 0 0 15px 3px var(--christmas-red);"></div>
+            
+            <!-- Item strip --><div id="roulette-strip" class="flex h-full items-center">
+                <!-- Items will be populated by JavaScript --></div>
+        </div>
+        
+        <button id="spin-button" class="mt-8 px-8 py-3 text-white font-bold text-xl rounded-full shadow-lg hover:bg-green-700 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-opacity-70"
+                style="background-color: var(--christmas-green); color: var(--snow-white); box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); ring-color: var(--christmas-gold);">
+            Spin!
+        </button>
+    </section>
+
+    <!-- Modal Section (Z-index 50) --><div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+        <!-- Added 'modal-neon' class here for the red outline -->
+        <div class="modal-content modal-neon relative bg-dark-background p-8 rounded-2xl shadow-2xl text-center w-full max-w-md">
+            
+            <!-- Fireworks Container --><div id="fireworks-container" class="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <!-- Particles will be spawned here --></div>
+
+            <!-- Step 1: Form --><div id="form-step" class="relative z-10">
+                <h2 id="congrats-title" class="text-4xl font-bold mb-6" style="color: var(--christmas-red); text-shadow: 0 0 15px var(--christmas-red);">Congratulations!</h2>
+                <p class="text-md text-gray-400 mb-4">You won: <span id="won-gift-name" class="font-extrabold" style="color: var(--christmas-gold);"></span></p>
+                
+                <!-- Enhanced Christmas style for input --><input id="name-input" type="text" placeholder="Your Nickname" class="w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all"
+                       style="background-color: var(--snow-white); border-color: var(--christmas-green); border-width: 3px; box-shadow: 0 0 10px rgba(5, 150, 105, 0.5); ring-color: var(--christmas-red);">
+                       
+                <button id="submit-button" class="mt-6 w-full px-8 py-3 text-white font-bold text-xl rounded-full shadow-lg hover:bg-red-700 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-70"
+                        style="background-color: var(--christmas-red); color: var(--snow-white); box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); ring-color: var(--christmas-gold);">
+                    Collect Gift
+                </button>
+            </div>
+
+            <!-- Step 2: Success Message --><div id="success-step" class="hidden relative z-10">
+                <!-- Checkmark SVG --><svg class="checkmark w-24 h-24 mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" style="stroke: var(--christmas-green);"/>
+                    <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" style="stroke: var(--christmas-green);"/>
+                </svg>
+
+                <h2 id="final-congrats" class="text-3xl font-bold mt-6 mb-4" style="color: var(--christmas-green);"></h2>
+                <p class="text-lg text-gray-200">Check your TikTok account for your <span id="final-gift-name" class="font-extrabold" style="color: var(--christmas-gold);"></span>!</p>
+                
+                <button id="play-again-button" class="mt-8 px-8 py-3 text-white font-bold text-xl rounded-full shadow-lg hover:bg-blue-600 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-70"
+                        style="background-color: var(--winter-blue); color: var(--snow-white); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); ring-color: var(--christmas-gold);">
+                    Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element References ---
+            const chestSection = document.getElementById('chest-section');
+            const rouletteSection = document.getElementById('roulette-section');
+            const modal = document.getElementById('modal');
+            const modalContent = modal.querySelector('.modal-content');
+            const openButton = document.getElementById('open-button');
+            const spinButton = document.getElementById('spin-button');
+            const submitButton = document.getElementById('submit-button');
+            const playAgainButton = document.getElementById('play-again-button'); 
+            const chestContainer = document.getElementById('chest-container'); // UPDATED: Target container
+            const chestImg = document.getElementById('chest-img'); // Kept for reference if needed
+            const rouletteStrip = document.getElementById('roulette-strip');
+            const nameInput = document.getElementById('name-input');
+            const formStep = document.getElementById('form-step');
+            const successStep = document.getElementById('success-step');
+            const wonGiftName = document.getElementById('won-gift-name'); 
+            const finalGiftName = document.getElementById('final-gift-name'); 
+            const finalCongrats = document.getElementById('final-congrats');
+            const fireworksContainer = document.getElementById('fireworks-container');
+            const snowContainer = document.getElementById('snow-container');
+
+            // --- Game Config (Original Images) ---
+            const giftPlaceholders = [
+                { name: 'Rare Knife', src: 'https://i.ibb.co/ZpxLY4m6/gift1.webp' }, 
+                { name: 'Common Skin', src: 'https://i.ibb.co/mCdCQX8Z/gift2.webp' }, 
+                { name: 'Stickers', src: 'https://i.ibb.co/b5VckzTT/gift3.webp' }, 
+                { name: 'Rare Skin', src: 'https://i.ibb.co/hJP8svJJ/gift4.webp' }, 
+                { name: 'Common Skin', src: 'https://i.ibb.co/7JzjcBvM/gift5.webp' }, 
+                { name: 'Gift', src: 'https://i.ibb.co/d4Ctmz05/gift6.webp' }, 
+                { name: 'Common Skin', src: 'https://i.ibb.co/B24wxPg2/gift7.webp' }, 
+                { name: 'Rare Skin', src: 'https://i.ibb.co/gZmY3gtW/gift8.webp' }, 
+                { name: 'Epic Gloves', src: 'https://i.ibb.co/hRFqt90C/gift9.webp' }, 
+                { name: 'Common Skin', src: 'https://i.ibb.co/QvphLh27/gift10.webp' }, 
+                { name: 'Stickers', src: 'https://i.ibb.co/4n79cVDV/gift11.webp' }, 
+                { name: 'Rare Skin', src: 'https://i.ibb.co/0pqJg4DH/gift12.webp' }, 
+                { name: 'Common Skin', src: 'https://i.ibb.co/ynzdH4G6/gift13.webp' }, 
+                { name: 'Legendary AWP', src: 'https://i.ibb.co/GQ8CtrDG/gift14.webp' }, 
+            ];
+            const totalItemsInStrip = 100; // Total items for a long spin
+            const itemWidthPx = 144; // 128px width + 16px horizontal margin
+            let winningGift = null;
+            const SNOWFLAKE_COUNT = 150; // Number of snowflakes for the realistic effect
+
+            // --- New Snowfall Function ---
+            function createSnowfall() {
+                const viewportWidth = window.innerWidth;
+
+                for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    
+                    // Random size (1px to 4px)
+                    const size = Math.random() * 3 + 1;
+                    snowflake.style.width = `${size}px`;
+                    snowflake.style.height = `${size}px`;
+
+                    // Random horizontal position (0 to 100vw)
+                    const startX = Math.random() * 100;
+                    snowflake.style.left = `${startX}vw`;
+                    
+                    // Random animation duration (5s to 15s)
+                    const duration = Math.random() * 10 + 5;
+                    snowflake.style.animationDuration = `${duration}s`;
+                    
+                    // Random delay (to stagger the start)
+                    const delay = Math.random() * -15; // Negative delay to start the animation mid-fall
+                    snowflake.style.animationDelay = `${delay}s`;
+                    
+                    // Wind drift (slight horizontal movement)
+                    const driftStart = (Math.random() * 10) - 5; // -5% to +5% drift start
+                    const driftEnd = (Math.random() * 10) - 5; // -5% to +5% drift end
+                    
+                    // Blur based on size (simulates depth/focus)
+                    const blurSize = Math.max(0.5, size / 3);
+                    snowflake.style.setProperty('--blur-size', `${blurSize}px`);
+                    
+                    // Set custom properties for animation
+                    snowflake.style.setProperty('--x-start', `${driftStart}vw`);
+                    snowflake.style.setProperty('--x-end', `${driftEnd}vw`);
+
+                    snowContainer.appendChild(snowflake);
+                }
+            }
+
+
+            // --- Utility Functions ---
+
+            /**
+             * Populates the roulette wheel with items
+             */
+            function populateRoulette() {
+                rouletteStrip.innerHTML = ''; // Clear previous items
+                for (let i = 0; i < totalItemsInStrip; i++) {
+                    const gift = giftPlaceholders[i % giftPlaceholders.length];
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `roulette-item flex items-center justify-center rounded-lg border-4`; 
+                    
+                    const giftImage = document.createElement('img');
+                    giftImage.src = gift.src;
+                    giftImage.alt = gift.name;
+                    giftImage.classList.add('p-2'); // Add some padding inside the item border
+                    
+                    itemDiv.appendChild(giftImage);
+                    rouletteStrip.appendChild(itemDiv);
+                }
+                
+                // Set initial padding to center the "start" point
+                rouletteStrip.style.paddingLeft = `calc(50vw - ${itemWidthPx / 2}px)`;
+                rouletteStrip.style.paddingRight = `calc(50vw - ${itemWidthPx / 2}px)`;
+            }
+
+            /**
+             * Resets the entire game to the spinning state
+             */
+            function resetGame() {
+                winningGift = null;
+                
+                // 1. Reset Modal
+                modal.classList.add('hidden', 'opacity-0');
+                modalContent.classList.remove('modal-content-animated');
+                fireworksContainer.innerHTML = '';
+                
+                // 2. Reset Steps
+                formStep.classList.remove('hidden');
+                successStep.classList.add('hidden');
+                nameInput.value = '';
+
+                // 3. Reset Roulette
+                spinButton.disabled = false;
+                rouletteStrip.style.transition = 'none'; 
+                rouletteStrip.style.transform = '';
+                
+                // 4. Re-enable transition
+                setTimeout(() => {
+                    rouletteStrip.style.transition = 'transform 6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                }, 50); 
+                
+                // 5. Cleanup confetti
+                document.querySelectorAll('.confetti-particle').forEach(c => c.remove());
+
+                // 6. Ensure roulette section is visible
+                if (rouletteSection.classList.contains('hidden')) {
+                    chestSection.classList.add('hidden');
+                    rouletteSection.classList.remove('hidden');
+                    rouletteSection.classList.add('opacity-100', 'scale-100');
+                    // Also ensure chest container is reset if we animate it out? 
+                    // (Not strictly needed as chestSection is just hidden)
+                    chestContainer.classList.remove('animate-break'); 
+                    // Note: removing animate-break restores opacity/scale if we were reusing the same element without hiding parent
+                }
+            }
+
+
+            /**
+             * Generates a random Christmas color for fireworks
+             */
+            function getRandomFireworkColor() {
+                // Christmas Colors: Red, Green, Gold, White, Winter Blue
+                const colors = ['var(--christmas-red)', 'var(--christmas-green)', 'var(--christmas-gold)', 'var(--snow-white)', 'var(--winter-blue)'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+
+            /**
+             * Triggers a screen-wide confetti fall
+             */
+            function triggerConfetti() {
+                const confettiCount = 150;
+                const colors = ['var(--christmas-red)', 'var(--christmas-green)', 'var(--christmas-gold)', 'var(--snow-white)', 'var(--winter-blue)'];
+
+                for (let i = 0; i < confettiCount; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti-particle';
+                    
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    const size = Math.random() * 8 + 4;
+                    confetti.style.width = `${size}px`;
+                    confetti.style.height = `${size * 0.4}px`;
+                    const startX = Math.random() * 100;
+                    confetti.style.left = `${startX}vw`;
+                    const duration = Math.random() * 3 + 4;
+                    const delay = Math.random() * 3;
+                    const flutterXStart = (Math.random() - 0.5) * 20;
+                    const flutterXEnd = (Math.random() - 0.5) * 100;
+                    
+                    confetti.style.setProperty('--x-start', `${flutterXStart}px`);
+                    confetti.style.setProperty('--x-end', `${flutterXEnd}px`);
+                    confetti.style.animationDuration = `${duration}s`;
+                    confetti.style.animationDelay = `${delay}s`;
+
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), (duration + delay) * 1000);
+                }
+            }
+
+
+            /**
+             * Creates a single firework "shell"
+             */
+            function createFireworkShell(startX, startY, color, delay) {
+                const star = document.createElement('div');
+                star.className = 'firework-star';
+                star.style.setProperty('--star-color', color);
+                star.style.left = `${startX}px`;
+                star.style.top = `${startY}px`;
+
+                const riseXOffset = (Math.random() - 0.5) * 100;
+                const riseYOffset = -(Math.random() * 200 + 150);
+                const burstRadius = Math.random() * 80 + 100;
+                const burstAngle = Math.random() * Math.PI * 2;
+                const burstXOffset = Math.cos(burstAngle) * burstRadius;
+                const burstYOffset = Math.sin(burstAngle) * burstRadius;
+
+                star.style.setProperty('--rise-x', `${riseXOffset}px`);
+                star.style.setProperty('--rise-y', `${riseYOffset}px`);
+                star.style.setProperty('--burst-x', `${riseXOffset + burstXOffset}px`);
+                star.style.setProperty('--burst-y', `${riseYOffset + burstYOffset}px`);
+
+                const animationDuration = Math.random() * 1.5 + 1.2;
+                star.style.animationDuration = `${animationDuration}s`;
+                star.style.animationDelay = `${delay}s`;
+
+                fireworksContainer.appendChild(star);
+
+                const sparkleDelay = delay + (animationDuration * 0.3);
+                setTimeout(() => {
+                    const sparklesPerBurst = 40;
+                    for (let i = 0; i < sparklesPerBurst; i++) {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'firework-sparkle';
+                        sparkle.style.setProperty('--sparkle-color', color);
+                        
+                        sparkle.style.left = `${startX + riseXOffset}px`;
+                        sparkle.style.top = `${startY + riseYOffset}px`;
+
+                        const angle = Math.random() * Math.PI * 2;
+                        const force = Math.random() * 100 + 50;
+                        const tx = Math.cos(angle) * force;
+                        const ty = Math.sin(angle) * force + (Math.random() * 30);
+
+                        sparkle.style.setProperty('--sparkle-tx', `${tx}px`);
+                        sparkle.style.setProperty('--sparkle-ty', `${ty}px`);
+
+                        const sparkleDuration = Math.random() * 0.8 + 0.6;
+                        sparkle.style.animationDuration = `${sparkleDuration}s`;
+                        sparkle.style.animationDelay = `${Math.random() * 0.1}s`;
+
+                        fireworksContainer.appendChild(sparkle);
+                        setTimeout(() => sparkle.remove(), sparkleDuration * 1000 + 200);
+                    }
+                }, sparkleDelay * 1000);
+
+                setTimeout(() => star.remove(), animationDuration * 1000 + 200);
+            }
+
+
+            /**
+             * Triggers multiple firework displays
+             */
+            function triggerFireworks() {
+                fireworksContainer.innerHTML = ''; // Clear old particles
+                const displayCount = 3; 
+                const modalRect = modalContent.getBoundingClientRect(); 
+
+                for (let i = 0; i < displayCount; i++) {
+                    const launchX = Math.random() * modalRect.width * 0.7 + modalRect.width * 0.15;
+                    const launchY = modalRect.height * (0.8 + Math.random() * 0.1);
+                    const delay = i * 0.6;
+                    const color = getRandomFireworkColor();
+                    createFireworkShell(launchX, launchY, color, delay);
+                }
+            }
+
+
+            // --- Event Listeners ---
+
+            /**
+             * 1. Open Button Clicked
+             * UPDATED: ANIMATE THE CONTAINER, NOT JUST THE CHEST IMAGE
+             */
+            openButton.addEventListener('click', () => {
+                openButton.disabled = true;
+                
+                // Shake the whole container (chest + hat)
+                chestContainer.classList.add('animate-shake');
+
+                setTimeout(() => {
+                    chestContainer.classList.remove('animate-shake');
+                    chestContainer.classList.add('animate-break');
+                }, 1000);
+
+                setTimeout(() => {
+                    chestSection.classList.add('opacity-0', 'scale-90');
+                }, 1100);
+
+                setTimeout(() => {
+                    chestSection.classList.add('hidden');
+                    rouletteSection.classList.remove('hidden');
+                    rouletteSection.classList.add('opacity-100', 'scale-100');
+                    rouletteStrip.style.transition = 'transform 6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                }, 1500);
+            });
+
+            /**
+             * 2. Spin Button Clicked
+             */
+            spinButton.addEventListener('click', () => {
+                if (spinButton.disabled) return;
+                spinButton.disabled = true;
+
+                const winningGiftIndex = Math.floor(Math.random() * giftPlaceholders.length);
+                winningGift = giftPlaceholders[winningGiftIndex];
+                
+                let targetItemIndex = 0;
+                while (true) {
+                    let R_IDX = Math.floor(Math.random() * 26) + 70; // 70-95
+                    if (R_IDX % giftPlaceholders.length === winningGiftIndex) {
+                        targetItemIndex = R_IDX;
+                        break;
+                    }
+                }
+                
+                const jitterPx = (Math.random() - 0.5) * (itemWidthPx * 0.9);
+                const targetTranslateX = -(targetItemIndex * itemWidthPx) + jitterPx;
+                rouletteStrip.style.transform = `translateX(${targetTranslateX}px)`;
+            });
+
+            /**
+             * 3. Roulette Spin Finished
+             */
+            rouletteStrip.addEventListener('transitionend', () => {
+                if (!winningGift) return; 
+                
+                console.log('Spin finished! You won:', winningGift.name);
+                wonGiftName.textContent = winningGift.name;
+                triggerFireworks();
+
+                setTimeout(() => {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('opacity-100');
+                    modalContent.classList.add('modal-content-animated');
+                }, 500); 
+            });
+
+            /**
+             * 4. Submit Name Button Clicked
+             */
+            submitButton.addEventListener('click', () => {
+                const name = nameInput.value.trim();
+                if (name === '') {
+                    // Highlight input field on error
+                    nameInput.classList.add('border-red-500', 'ring-red-500');
+                    nameInput.focus();
+                    return;
+                }
+                nameInput.classList.remove('border-red-500', 'ring-red-500');
+                
+                finalCongrats.textContent = `Congratulations, ${name}!`;
+                finalGiftName.textContent = winningGift.name;
+                
+                formStep.classList.add('hidden');
+                successStep.classList.remove('hidden');
+
+                triggerFireworks();
+                triggerConfetti();
+            });
+
+            /**
+             * 5. Play Again Button Clicked
+             */
+            playAgainButton.addEventListener('click', () => {
+                resetGame();
+            });
+
+            // --- Initialization ---
+            populateRoulette();
+            createSnowfall(); // NEW: Start the snowfall
+        });
+    </script>
+</body>
+</html>
