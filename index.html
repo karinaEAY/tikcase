@@ -104,7 +104,8 @@
             20%, 40%, 60%, 80% { transform: translateX(10px); }
         }
         .animate-shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) 2;
+            /* CHANGED: Increased iterations to 5 (5 * 0.5s = 2.5s) */
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) 5;
         }
 
         @keyframes break-pop {
@@ -279,7 +280,8 @@
                 <!-- Particles will be spawned here --></div>
 
             <!-- Step 1: Form --><div id="form-step" class="relative z-10">
-                <h2 id="congrats-title" class="text-4xl font-bold mb-6" style="color: var(--christmas-red); text-shadow: 0 0 15px var(--christmas-red);">Congratulations!</h2>
+                <!-- CHANGED: Reduced font size from text-4xl to text-3xl -->
+                <h2 id="congrats-title" class="text-3xl font-bold mb-6" style="color: var(--christmas-red); text-shadow: 0 0 15px var(--christmas-red);">Congratulations!</h2>
                 <p class="text-md text-gray-400 mb-4">You won: <span id="won-gift-name" class="font-extrabold" style="color: var(--christmas-gold);"></span></p>
                 
                 <!-- Enhanced Christmas style for input --><input id="name-input" type="text" placeholder="Your Nickname" class="w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all"
@@ -597,21 +599,23 @@
                 // Shake the whole container (chest + hat)
                 chestContainer.classList.add('animate-shake');
 
+                // CHANGED: Wait longer for shake (2.5s = 2500ms) before breaking
                 setTimeout(() => {
                     chestContainer.classList.remove('animate-shake');
                     chestContainer.classList.add('animate-break');
-                }, 1000);
+                }, 2500); // Adjusted from 1000 to 2500
 
+                // CHANGED: Adjusted other timeouts to follow the 2.5s shake
                 setTimeout(() => {
                     chestSection.classList.add('opacity-0', 'scale-90');
-                }, 1100);
+                }, 2600); // 2500 + 100ms
 
                 setTimeout(() => {
                     chestSection.classList.add('hidden');
                     rouletteSection.classList.remove('hidden');
                     rouletteSection.classList.add('opacity-100', 'scale-100');
                     rouletteStrip.style.transition = 'transform 6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-                }, 1500);
+                }, 3000); // 2500 + 500ms (approx animation end)
             });
 
             /**
